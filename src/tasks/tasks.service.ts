@@ -11,22 +11,40 @@ import { TaskStatus } from './task-status.enum';
 export class TasksService {
   constructor(private readonly taskRepository: TaskRepository) {}
 
-  getTasks(getTaskDto: GetTaskDto) {}
+  getTasks(getTaskDto: GetTaskDto): Promise<Task[]> {
+    return this.taskRepository.getTasks(getTaskDto);
+  }
 
   async getTaskById(id: number): Promise<Task> {
-    return this.taskRepository.getTaskById(id);
+    const found = await this.taskRepository.findOne({ where: { id } });
+
+    if (!found) {
+      throw new NotFoundException(`Task with id ${id} not found`);
+    }
+
+    return found;
   }
 
   async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
     return await this.taskRepository.createTask(createTaskDto);
   }
-  async searchTasks(getTaskDto: GetTaskDto): Promise<Task[]> {
-    return this.taskRepository.searchTasks(getTaskDto);
-  }
   async deleteTask(id: number): Promise<string> {
-    return this.taskRepository.deleteTask(id);
+    const result = await this.taskRepository.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Task with ${id} not found`);
+    }
+
+    return 'Task deleted Succesfully';
   }
   async updateTask(id: number, status: TaskStatus): Promise<Task> {
-    return this.taskRepository.updateTask(id, status);
+    const task = await this.getTaskById(id);
+
+    if (!task) {
+      throw new NotFoundException(`Task with ${id} not found`);
+    }
+
+    task.status = status;
+    return this.taskRepository.save(task);
   }
 }

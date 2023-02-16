@@ -23,7 +23,7 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  getTasks(@Query(ValidationPipe) getTaskDto: GetTaskDto) {
+  getTasks(@Query(ValidationPipe) getTaskDto: GetTaskDto): Promise<Task[]> {
     return this.tasksService.getTasks(getTaskDto);
   }
 
