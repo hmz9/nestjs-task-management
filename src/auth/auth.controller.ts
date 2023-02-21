@@ -16,12 +16,16 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('/signup')
-  async signup(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<string> {
+  async signup(
+    @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
+  ): Promise<string> {
     return this.authService.signup(authCredentialsDto);
   }
 
   @Put('/signin')
-  async signin(@Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto): Promise<string> {
+  async signin(
+    @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
+  ): Promise<{ accessToken: string }> {
     return this.authService.signin(authCredentialsDto);
   }
 }

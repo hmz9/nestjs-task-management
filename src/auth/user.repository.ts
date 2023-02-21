@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import * as bcrypt from 'bcrypt';
@@ -22,13 +27,11 @@ export class UserRepository extends Repository<User> {
       await this.save(user);
       return `User ${username} signed up succesfully`;
     } catch (error) {
-      if(error.code === '23505'){
+      if (error.code === '23505') {
         throw new ConflictException('username already exists');
+      } else {
+        throw new InternalServerErrorException();
       }
-      else{
-        throw new InternalServerErrorException();   
-      }
-      
     }
   }
 
@@ -36,17 +39,17 @@ export class UserRepository extends Repository<User> {
     return bcrypt.hash(password, salt);
   }
 
-  async validatePasswordAndSignIn(authCredentialsDto: AuthCredentialsDto) {
+  async validatePasswordAndSignIn(
+    authCredentialsDto: AuthCredentialsDto,
+  ): Promise<string> {
     const { username, password } = authCredentialsDto;
 
     const user = await this.findOne({ where: { username } });
 
-    if(user && await user.validatePassword(password)){
+    if (user && (await user.validatePassword(password))) {
       return user.username;
-    }
-    else{
+    } else {
       throw new UnauthorizedException('Invalid credentials');
     }
-
   }
 }
