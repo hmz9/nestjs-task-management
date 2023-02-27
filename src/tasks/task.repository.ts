@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Injectable, Inject } from '@nestjs/common';
 import { stat } from 'fs';
+import { User } from 'src/auth/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTaskDto } from './dto/get-task.dto';
@@ -13,10 +14,16 @@ export class TaskRepository extends Repository<Task> {
     super(Task, dataSource.createEntityManager());
   }
 
-  async getTasks(getTaskDto: GetTaskDto): Promise<Task[]> {
+  async getTasks(
+    getTaskDto: GetTaskDto, 
+    user: User
+    ): Promise<Task[]> {
+
     const { search, status } = getTaskDto;
 
     const query = this.createQueryBuilder('task');
+
+    query.where('task.userId = :userId', { userId: user.id });
 
     if(status){
       query.andWhere('task.status = :status', { status });
@@ -31,17 +38,21 @@ export class TaskRepository extends Repository<Task> {
     return tasks;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+  async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const { title, description } = createTaskDto;
 
     const task = new Task();
     task.title = title;
     task.description = description;
     task.status = TaskStatus.OPEN;
+    task.user = user;
 
-    const result = await this.save(task);
+    // await this.dataSource.manager.save(task);
+    await task.save();
 
-    return result;
+    delete task.user;
+
+    return task;
   }
 
 }
